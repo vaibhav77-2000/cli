@@ -73,8 +73,8 @@ class aiServiceInstallArgBuilderMixin():
 
         # MongoDb Community Operator
         # -----------------------------------------------------------------------------
-        if self.getParam('mongodb_namespace') != "":
-            command += f"  --mongodb-namespace \"{self.getParam('mongodb_namespace')}\"{newline}"
+        if self.getParam('mongodb_mck_namespace') != "":
+            command += f"  --mongodb-mck-namespace \"{self.getParam('mongodb_mck_namespace')}\"{newline}"
 
         # Aibroker Channel
         # -----------------------------------------------------------------------------

@@ -45,11 +45,11 @@ class UpdateApp(BaseApp):
             requiredParams = ["mas_catalog_version"]
             optionalParams = [
                 "db2_namespace",
-                "mongodb_namespace",
-                "mongodb_v5_upgrade",
-                "mongodb_v6_upgrade",
-                "mongodb_v7_upgrade",
-                "mongodb_v8_upgrade",
+                "mongodb_mck_namespace",
+                "mongodb_mck_v5_upgrade",
+                "mongodb_mck_v6_upgrade",
+                "mongodb_mck_v7_upgrade",
+                "mongodb_mck_v8_upgrade",
                 "kafka_namespace",
                 "kafka_provider",
                 "dro_storage_class",
@@ -154,10 +154,10 @@ class UpdateApp(BaseApp):
         else:
             self.printSummary("IBM Db2", "No action required")
 
-        if self.getParam("mongodb_namespace") != "":
-            self.printSummary("MongoDb CE", f"All MongoDbCommunity instances in {self.getParam('mongodb_namespace')}")
+        if self.getParam("mongodb_mck_namespace") != "":
+            self.printSummary("MongoDb MCK", f"All MongoDbCommunity instances in {self.getParam('mongodb_mck_namespace')}")
         else:
-            self.printSummary("MongoDb CE", "No action required")
+            self.printSummary("MongoDb MCK", "No action required")
 
         if self.getParam("kafka_namespace") != "":
             self.printSummary("Apache Kafka", f"All Kafka instances in {self.getParam('kafka_namespace')}")
@@ -333,14 +333,14 @@ class UpdateApp(BaseApp):
                 h.stop_and_persist(symbol=self.successIcon, text="Grafana Operator v4 is not installed")
 
     def detectMongoDb(self) -> None:
-        with Halo(text='Checking for MongoDb CE', spinner=self.spinner) as h:
+        with Halo(text='Checking for MongoDb MCK', spinner=self.spinner) as h:
             # TODO: Replace this with a lookup to just use whatever is already set up
             # because we should not be changing the scale of the mongodb cluster during
             # and update
             if self.isSNO():
-                self.setParam("mongodb_replicas", "1")
+                self.setParam("mongodb_mck_replicas", "1")
             else:
-                self.setParam("mongodb_replicas", "3")
+                self.setParam("mongodb_mck_replicas", "3")
 
             # Determine the namespace
             try:
@@ -348,18 +348,18 @@ class UpdateApp(BaseApp):
                 mongoClusters = mongoDbAPI.get().to_dict()["items"]
 
                 if len(mongoClusters) > 0:
-                    mongoNamespace = mongoClusters[0]["metadata"]["namespace"]
-                    currentMongoVersion = mongoClusters[0]["status"]["version"]
+                    mongomckNamespace = mongoClusters[0]["metadata"]["namespace"]
+                    currentMongoMckVersion = mongoClusters[0]["status"]["version"]
 
-                    self.setParam("mongodb_namespace", mongoNamespace)
+                    self.setParam("mongodb_mck_namespace", mongomckNamespace)
 
                     # Important:
                     # This CLI can run independent of the ibm.mas_devops collection, so we cannot reference
                     # the case bundles in there anymore
                     # Longer term we will centralise this information inside the mas-devops python collection,
                     # where it can be made available to both the ansible collection and this python package.
-                    defaultMongoVersion = "8.0.17"
-                    mongoVersions = {
+                    defaultMongoMckVersion = "1.6.1"
+                    mongomckVersions = {
                         "v9-240625-amd64": "6.0.12",
                         "v9-240730-amd64": "6.0.12",
                         "v9-240827-amd64": "6.0.12",
@@ -381,57 +381,58 @@ class UpdateApp(BaseApp):
                         "v9-251127-amd64": "8.0.13",
                         "v9-251224-amd64": "8.0.13",
                         "v9-251231-amd64": "8.0.17",
+                        "v9-260129-amd64": "1.6.1",
                     }
                     catalogVersion = self.getParam('mas_catalog_version')
-                    if catalogVersion in mongoVersions:
-                        targetMongoVersion = mongoVersions[self.getParam('mas_catalog_version')]
+                    if catalogVersion in mongomckVersions:
+                        targetMongoMckVersion = mongomckVersions[self.getParam('mas_catalog_version')]
                     else:
-                        targetMongoVersion = defaultMongoVersion
+                        targetMongoMckVersion = defaultMongoMckVersion
 
-                    self.setParam("mongodb_version", targetMongoVersion)
+                    self.setParam("mongodb_mck_version", targetMongoMckVersion)
 
-                    targetMongoVersionMajor = targetMongoVersion.split(".")[0]
-                    currentMongoVersionMajor = currentMongoVersion.split(".")[0]
+                    targetMongoMckVersionMajor = targetMongoMckVersion.split(".")[0]
+                    currentMongoMckVersionMajor = currentMongoMckVersion.split(".")[0]
 
-                    if targetMongoVersionMajor > currentMongoVersionMajor:
+                    if targetMongoMckVersionMajor > currentMongoMckVersionMajor:
                         self.setParam("mongodb_action", "install")
                         # Let users know that Mongo will be upgraded if existing MongoDb major.minor version
                         # is lower than the target major version
                         # We don't show this message for normal updates, e.g. 5.0.1 to 5.0.2
-                        if self.noConfirm and self.getParam(f"mongodb_v{targetMongoVersionMajor}_upgrade") != "true":
+                        if self.noConfirm and self.getParam(f"mongodb_mck)v{targetMongoMckVersionMajor}_upgrade") != "true":
                             # The user has chosen not to provide confirmation but has not provided the flag to pre-approve the mongo major version update
-                            h.stop_and_persist(symbol=self.failureIcon, text=f"MongoDb CE {currentMongoVersion} needs to be updated to {targetMongoVersion}")
-                            self.showMongoDependencyUpdateNotice(currentMongoVersion, targetMongoVersion)
-                            self.fatalError(f"By choosing {self.getParam('mas_catalog_version')} you must confirm MongoDb update to version {targetMongoVersionMajor} using '--mongodb-v{targetMongoVersionMajor}-upgrade' when using '--no-confirm'")
-                        elif self.getParam(f"mongodb_v{targetMongoVersionMajor}_upgrade") != "true":
+                            h.stop_and_persist(symbol=self.failureIcon, text=f"MongoDb MCK {currentMongoMckVersion} needs to be updated to {targetMongoMckVersion}")
+                            self.showMongoDependencyUpdateNotice(currentMongoMckVersion, targetMongoMckVersion)
+                            self.fatalError(f"By choosing {self.getParam('mas_catalog_version')} you must confirm MongoDb update to version {targetMongoMckVersionMajor} using '--mongodb-mck-v{targetMongoMckVersionMajor}-upgrade' when using '--no-confirm'")
+                        elif self.getParam(f"mongodb_mck_v{targetMongoMckVersionMajor}_upgrade") != "true":
                             # The user has not pre-approved the major version update
-                            h.stop_and_persist(symbol=self.successIcon, text=f"MongoDb CE {currentMongoVersion} needs to be updated to {targetMongoVersion}")
-                            self.showMongoDependencyUpdateNotice(currentMongoVersion, targetMongoVersion)
-                            if not self.yesOrNo(f"Confirm update from MongoDb {currentMongoVersion} to {targetMongoVersion}", f"mongodb_v{targetMongoVersionMajor}_upgrade"):
+                            h.stop_and_persist(symbol=self.successIcon, text=f"MongoDb MCK {currentMongoMckVersion} needs to be updated to {targetMongoMckVersion}")
+                            self.showMongoDependencyUpdateNotice(currentMongoMckVersion, targetMongoMckVersion)
+                            if not self.yesOrNo(f"Confirm update from MongoDb {currentMongoMckVersion} to {targetMongoMckVersion}", f"mongodb_mck_v{targetMongoMckVersionMajor}_upgrade"):
                                 # If the user did not approve the update, abort
                                 exit(1)
                             print()
                         else:
-                            h.stop_and_persist(symbol=self.successIcon, text=f"MongoDb CE will be updated from {currentMongoVersion} to {targetMongoVersion}")
-                            self.showMongoDependencyUpdateNotice(currentMongoVersion, targetMongoVersion)
-                    elif targetMongoVersion < currentMongoVersion:
-                        h.stop_and_persist(symbol=self.failureIcon, text=f"MongoDb CE {currentMongoVersion} cannot be downgraded to {targetMongoVersion}")
-                        self.showMongoDependencyUpdateNotice(currentMongoVersion, targetMongoVersion)
-                        self.fatalError(f"Existing MongoDB Community Edition installation at version {currentMongoVersion} cannot be downgraded to version {targetMongoVersion}")
+                            h.stop_and_persist(symbol=self.successIcon, text=f"MongoDb MCK will be updated from {currentMongoMckVersion} to {targetMongoMckVersion}")
+                            self.showMongoDependencyUpdateNotice(currentMongoMckVersion, targetMongoMckVersion)
+                    elif targetMongoMckVersion < currentMongoMckVersion:
+                        h.stop_and_persist(symbol=self.failureIcon, text=f"MongoDb MCK {currentMongoMckVersion} cannot be downgraded to {targetMongoMckVersion}")
+                        self.showMongoDependencyUpdateNotice(currentMongoMckVersion, targetMongoMckVersion)
+                        self.fatalError(f"Existing MongoDB Community Edition installation at version {currentMongoMckVersion} cannot be downgraded to version {targetMongoMckVersion}")
                     else:
-                        h.stop_and_persist(symbol=self.successIcon, text=f"MongoDb CE is already installed at version {targetMongoVersion}")
+                        h.stop_and_persist(symbol=self.successIcon, text=f"MongoDb MCK is already installed at version {targetMongoMckVersion}")
                 else:
                     # There's no MongoDb instance installed in the cluster, so nothing to do
-                    h.stop_and_persist(symbol=self.successIcon, text="No MongoDb CE instances found")
+                    h.stop_and_persist(symbol=self.successIcon, text="No MongoDb MCK instances found")
             except (ResourceNotFoundError, NotFoundError):
                 # There's no MongoDb instance installed in the cluster, so nothing to do
-                h.stop_and_persist(symbol=self.successIcon, text="MongoDb CE is not installed")
+                h.stop_and_persist(symbol=self.successIcon, text="MongoDb MCK is not installed")
 
-    def showMongoDependencyUpdateNotice(self, currentMongoVersion, targetMongoVersion) -> None:
+    def showMongoDependencyUpdateNotice(self, currentMongoMckVersion, targetMongoMckVersion) -> None:
         self.printHighlight([
             "",
             "<u>Dependency Update Notice</u>",
-            f"MongoDB Community Edition is currently running version {currentMongoVersion} and will be updated to {targetMongoVersion}",
+            f"MongoDB Community Edition is currently running version {currentMongoMckVersion} and will be updated to {targetMongoMckVersion}",
             "It is recommended that you backup your MongoDB instance before proceeding:",
             "  <u>https://www.ibm.com/docs/en/mas-cd/continuous-delivery?topic=suite-backing-up-mongodb-maximo-application</u>",
             ""

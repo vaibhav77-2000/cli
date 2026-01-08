@@ -79,7 +79,7 @@ class AiServiceInstallApp(BaseApp, aiServiceInstallArgBuilderMixin, aiServiceIns
     @logMethodCall
     def processCatalogChoice(self) -> list:
         self.catalogDigest = self.chosenCatalog["catalog_digest"]
-        self.catalogMongoDbVersion = self.chosenCatalog["mongo_extras_version_default"]
+        self.catalogMongoDbVersion = self.chosenCatalog["mongo_mck_extras_version_default"]
         applications = {
             "AI Service": "aiservice_version",
         }
@@ -265,7 +265,7 @@ class AiServiceInstallApp(BaseApp, aiServiceInstallArgBuilderMixin, aiServiceIns
                     self.setParam("aiservice_channel", value)
 
             # MongoDB
-            elif key == "mongodb_namespace":
+            elif key == "mongodb_mck_namespace":
                 if value is not None and value != "":
                     self.setParam(key, value)
                     self.setParam("sls_mongodb_cfg_file", f"/workspace/configs/mongo-{value}.yml")

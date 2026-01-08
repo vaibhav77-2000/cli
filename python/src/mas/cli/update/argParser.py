@@ -42,13 +42,13 @@ depsArgGroup.add_argument(
 )
 
 depsArgGroup.add_argument(
-    '--mongodb-namespace',
+    '--mongodb-mck-namespace',
     required=False,
     help="Namespace where MongoCE operator and instances will be updated",
 )
 
 depsArgGroup.add_argument(
-    '--mongodb-v5-upgrade',
+    '--mongodb-mck-v5-upgrade',
     required=False,
     action="store_const",
     const="true",
@@ -56,7 +56,7 @@ depsArgGroup.add_argument(
 )
 
 depsArgGroup.add_argument(
-    '--mongodb-v6-upgrade',
+    '--mongodb-mck-v6-upgrade',
     required=False,
     action="store_const",
     const="true",
@@ -64,7 +64,7 @@ depsArgGroup.add_argument(
 )
 
 depsArgGroup.add_argument(
-    '--mongodb-v7-upgrade',
+    '--mongodb-mck-v7-upgrade',
     required=False,
     action="store_const",
     const="true",
@@ -72,7 +72,7 @@ depsArgGroup.add_argument(
 )
 
 depsArgGroup.add_argument(
-    '--mongodb-v8-upgrade',
+    '--mongodb-mck-v8-upgrade',
     required=False,
     action="store_const",
     const="true",

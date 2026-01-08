@@ -159,7 +159,7 @@ droArgGroup.add_argument(
 # -----------------------------------------------------------------------------
 mongoArgGroup = aiServiceinstallArgParser.add_argument_group("MongoDb Community Operator")
 mongoArgGroup.add_argument(
-    "--mongodb-namespace",
+    "--mongodb-mck-namespace",
     required=False,
     help="Namespace for the MongoDB Community Operator"
 )

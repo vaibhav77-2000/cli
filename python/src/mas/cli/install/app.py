@@ -182,7 +182,7 @@ class InstallApp(BaseApp, InstallSettingsMixin, InstallSummarizerMixin, ConfigGe
     @logMethodCall
     def processCatalogChoice(self) -> list:
         self.catalogDigest = self.chosenCatalog["catalog_digest"]
-        self.catalogMongoDbVersion = self.chosenCatalog["mongo_extras_version_default"]
+        self.catalogMongoDbVersion = self.chosenCatalog["mongo_mck_extras_version_default"]
         if self.architecture != "s390x" and self.architecture != "ppc64le":
             self.catalogCp4dVersion = self.chosenCatalog["cpd_product_version_default"]
 
@@ -549,8 +549,8 @@ class InstallApp(BaseApp, InstallSettingsMixin, InstallSummarizerMixin, ConfigGe
     @logMethodCall
     def configSNO(self):
         if self.isSNO():
-            self.setParam("mongodb_replicas", "1")
-            self.setParam("mongodb_cpu_requests", "500m")
+            self.setParam("mongodb_mck_replicas", "1")
+            self.setParam("mongodb_mck_cpu_requests", "500m")
             self.setParam("mas_app_settings_aio_flag", "false")
 
     @logMethodCall
@@ -1299,7 +1299,7 @@ class InstallApp(BaseApp, InstallSettingsMixin, InstallSummarizerMixin, ConfigGe
                     self.setParam(key, value.upper())
 
             # MongoDB
-            elif key == "mongodb_namespace":
+            elif key == "mongodb_mck_namespace":
                 if value is not None and value != "":
                     self.setParam(key, value)
                     self.setParam("sls_mongodb_cfg_file", f"/workspace/configs/mongo-{value}.yml")

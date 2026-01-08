@@ -365,7 +365,7 @@ droArgGroup.add_argument(
 # -----------------------------------------------------------------------------
 mongoArgGroup = installArgParser.add_argument_group("MongoDb Community Operator")
 mongoArgGroup.add_argument(
-    "--mongodb-namespace",
+    "--mongodb-mck-namespace",
     required=False,
     help=""
 )
